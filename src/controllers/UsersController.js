@@ -1,9 +1,28 @@
+const { hash } = require('bcryptjs');
+const AppError = require('../utils/AppError');
+const knex = require('../database/knex');
+
 class UsersController {
-  create(request, response) {
+  async create(request, response) {
     const { name, email, password } = request.body;
 
-    console.log('Post funcionando')
-    response.json({ name, email, password });
+    const checkUserExists = await knex('users').where('email', email).first();
+
+    if (checkUserExists) {
+      throw new AppError('Este e-mail já está em uso.');
+    };
+
+    const hashedPassword = await hash(password, 8);
+
+    await knex('users').insert({
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    console.log('Create funcionando')
+
+    return response.status(201).json();
   }
 }
 
