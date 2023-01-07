@@ -1,10 +1,21 @@
-class UsersController {
-  create(request, response) {
-    const { name, email, password } = request.body;
+const AppError = require('../utils/AppError');
+const knex = require('../database/knex');
 
-    console.log('Post funcionando')
-    response.json({ name, email, password });
+class OrdersController {
+  async create(request, response) {
+    const { status, total_price } = request.body;
+    const user_id = request.user.id;
+
+    const order_id = await knex('orders').insert({
+      status,
+      total_price,
+      user_id
+    });
+
+    console.log('Order create funcionando')
+
+    return response.status(201).json();
   }
 }
 
-module.exports = UsersController
+module.exports = OrdersController
