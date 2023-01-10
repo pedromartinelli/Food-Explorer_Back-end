@@ -11,9 +11,6 @@ class FoodsController {
       price,
     });
 
-    console.log(food_id)
-
-
     const ingredientsInsert = ingredients.map(name => {
       return {
         food_id,
@@ -35,7 +32,7 @@ class FoodsController {
   };
 
   async update(request, response) {
-    const { name, description, price, ingredients } = request.body;
+    const { name, description, price, ingredients, updated_at } = request.body;
     const { id } = request.params;
 
     const food = await knex('foods').where('id', id).first();
@@ -44,11 +41,16 @@ class FoodsController {
       throw new AppError('Comida não existe.');
     }
 
+    const currentDatetime = new Date().toLocaleString();
+
+
     await knex('foods').where('id', id).update({
       name,
       description,
-      price
+      price,
+      updated_at: currentDatetime
     });
+
 
     const ingredientsInsert = ingredients.map(name => {
       return {
@@ -78,6 +80,15 @@ class FoodsController {
       ...food,
       ingredients
     });
+  };
+
+  async index(request, response) {
+    const { name } = request.query;
+
+    const foods = await knex('foods').whereLike('name', `%${name}%`).orderBy('name');
+
+    return response.json(foods);
+
   };
 };
 
