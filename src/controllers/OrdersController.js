@@ -13,7 +13,24 @@ class OrdersController {
     });
 
     return response.status(201).json();
-  }
+  };
+
+  async update(request, response) {
+    const { status } = request.body;
+    const { id } = request.params;
+
+    const order = await knex('orders').where('id', id).first();
+
+    if (!order) {
+      throw new AppError('Ordem não existe.');
+    }
+
+    await knex('orders').where('id', id).update({
+      status
+    });
+
+    return response.json();
+  };
 }
 
 module.exports = OrdersController
