@@ -4,7 +4,7 @@ const knex = require('../database/knex');
 class OrdersController {
   async create(request, response) {
     const { status, total_price } = request.body;
-    const { user_id } = request.params;
+    const user_id = request.user.id;
 
     await knex('orders').insert({
       status,
@@ -18,16 +18,22 @@ class OrdersController {
   async update(request, response) {
     const { status } = request.body;
     const { id } = request.params;
+    const role = request.user.role;
 
-    const order = await knex('orders').where('id', id).first();
+    if (role === 'admin') {
+      const order = await knex('orders').where('id', id).first();
 
-    if (!order) {
-      throw new AppError('Ordem não existe.');
-    }
+      if (!order) {
+        throw new AppError('Ordem não existe.');
+      }
 
-    await knex('orders').where('id', id).update({
-      status
-    });
+      await knex('orders').where('id', id).update({
+        status
+      });
+    } else {
+      throw new AppError('Você não possui direitos de administrador.')
+    };
+
 
     return response.json();
   };

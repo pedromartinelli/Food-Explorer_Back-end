@@ -4,68 +4,80 @@ const AppError = require('../utils/AppError');
 class FoodsController {
   async create(request, response) {
     const { name, description, price, ingredients } = request.body;
+    const role = request.user.role;
 
-    const food_id = await knex('foods').insert({
-      name,
-      description,
-      price,
-    });
+    if (role === 'admin') {
+      const food_id = await knex('foods').insert({
+        name,
+        description,
+        price,
+      });
 
-    const ingredientsInsert = ingredients.map(name => {
-      return {
-        food_id,
-        name
-      };
-    });
+      const ingredientsInsert = ingredients.map(name => {
+        return {
+          food_id,
+          name
+        };
+      });
 
-    await knex('ingredients').insert(ingredientsInsert);
+      await knex('ingredients').insert(ingredientsInsert);
+
+    } else {
+      throw new AppError('Você não possui direitos de administrador.')
+    };
+
 
     return response.json();
   };
 
   async delete(request, response) {
     const { id } = request.params;
+    const role = request.user.role;
 
-    await knex('foods').where({ id }).delete();
+    if (role === 'admin') {
+      await knex('foods').where({ id }).delete();
+    } else {
+      throw new AppError('Você não possui direitos de administrador.')
+    };
 
     return response.json();
   };
 
   async update(request, response) {
-    const { name, description, price, ingredients, updated_at } = request.body;
+    const { name, description, price, ingredients } = request.body;
     const { id } = request.params;
+    const role = request.user.role;
 
-    const food = await knex('foods').where('id', id).first();
+    if (role === 'admin') {
+      const food = await knex('foods').where('id', id).first();
 
-    if (!food) {
-      throw new AppError('Comida não existe.');
-    }
+      if (!food) {
+        throw new AppError('Comida não existe.');
+      }
 
-    const currentDatetime = new Date().toLocaleString();
-
-
-    await knex('foods').where('id', id).update({
-      name,
-      description,
-      price,
-      updated_at: currentDatetime
-    });
+      const currentDatetime = new Date().toLocaleString();
 
 
-    const ingredientsInsert = ingredients.map(name => {
-      return {
-        food_id: id,
-        name
-      };
-    });
-
-    // const ingredientsAlreadyRegistered = await knex('ingredients').where({ food_id: id }).orderBy('name');
-
-    // const compareIngredients = ingredientsInsert.filter
+      await knex('foods').where('id', id).update({
+        name,
+        description,
+        price,
+        updated_at: currentDatetime
+      });
 
 
-    // await knex('ingredients').where({ name }).delete();
-    await knex('ingredients').insert(ingredientsInsert);
+      const ingredientsInsert = ingredients.map(name => {
+        return {
+          food_id: id,
+          name
+        };
+      });
+
+      await knex('ingredients').insert(ingredientsInsert);
+
+    } else {
+      throw new AppError('Você não possui direitos de administrador.')
+    };
 
     return response.json();
   };

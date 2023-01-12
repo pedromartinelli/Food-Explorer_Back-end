@@ -17,7 +17,8 @@ class UsersController {
     await knex('users').insert({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: 'user'
     });
 
     return response.status(201).json();
